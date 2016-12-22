@@ -1,12 +1,10 @@
 package seismic.json;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class JsObject {
 	
@@ -22,27 +20,31 @@ public class JsObject {
 		this.map = new HashMap<String, String>();
 	}
 	
-	public String string(String key) {
+	public String getString(String key) {
 		if (jsonString != null) {
 			process();
 		}
 		return map.get(key);
 	}
 	
-	public JsObject object(String key) {
-		return new JsObject(key);
+	public JsObject getObject(String key) {
+		return new JsObject(getString(key));
 	}
 	
-	public int integer(String key) {
-		return Integer.parseInt(string(key));
+	public JsArray getArray(String key) {
+		return new JsArray(key);
 	}
 	
-	public double number(String key) {
-		return Double.parseDouble(string(key));
+	public int getInt(String key) {
+		return Integer.parseInt(getString(key));
 	}
 	
-	public boolean bool(String key) {
-		String value = string(key);
+	public double getDouble(String key) {
+		return Double.parseDouble(getString(key));
+	}
+	
+	public boolean getBoolean(String key) {
+		String value = getString(key);
 		if (value.equals("true")) {
 			return true;
 		} else if (value.equals("false")) {
@@ -61,30 +63,25 @@ public class JsObject {
 			jsonString = null;
 			return;
 		}
+		if (s.length() == 1) {
+			throw new RuntimeException(s);
+		}
 		s = s.substring(1, s.length() - 1);
 		
 		// ensure not inside a string or array, and object depth of 1
 		int curlyCount = 0;
 		int squareCount = 0;
 		boolean insideString = false;
-		
-		// if duplicate key, latter overwrites
-		List<String> list = new ArrayList<String>();
-		StringBuffer buffer = new StringBuffer();	
+		List<Integer> commas = new ArrayList<Integer>();
 
 		for (int i = 0; i < s.length(); i ++) {
 			char c = s.charAt(i);
 						
 			// too many closing } or ]
 			if (curlyCount < 0 || squareCount < 0) {
-				throw new RuntimeException("Malformed JSON");
+				error();
 			}
 			
-//			boolean isDelimiter = false;
-			if (c != ',' || (curlyCount > 0 || squareCount > 0 || insideString)) {
-				buffer.append(c);
-//				break;
-			}
 			switch (c) {
 				case '{':
 					if (!insideString) {
@@ -97,41 +94,43 @@ public class JsObject {
 					}
 					break;
 				case '"':
-				case '\'':
 					insideString = !insideString;
 					break;
 				case ',':
-					if (buffer.length() > 0 && curlyCount == 0 && squareCount == 0 && !insideString) {
-						list.add(buffer.toString());
-//						isDelimiter = true;
+					if (curlyCount == 0 && squareCount == 0 && !insideString) {
+						commas.add(i);
 					}
-					buffer = new StringBuffer();
 					break;
 			}
 		}
 		
 		// too many opening { or [
 		if (curlyCount > 0 || squareCount > 0 || insideString) {
-			throw new RuntimeException("Malformed JSON");
+			error();
 		}
-		// flush the last item, which will not have a comma following it
-		if (buffer.length() > 0) {
-			list.add(buffer.toString());
+		
+		// 
+		List<String> list = new ArrayList<String>();
+		int previousComma = -1;
+		for (int commaIdx : commas) {
+			list.add(s.substring(previousComma + 1, commaIdx));
+			previousComma = commaIdx;
 		}
+		list.add(s.substring(previousComma + 1, s.length()));
 		
 		// convert "_:_" list to map
 		for (String entry : list) {
 			int colonIdx = entry.indexOf(":");
 			
-			String blah = list.get(0);
-			if (colonIdx == -1) throw new RuntimeException(blah);
+			// some key-value pair does not contain a colon
+			if (colonIdx == -1) {
+				error();
+			}
 			String key = entry.substring(0, colonIdx).trim();
-			// ignore single or double quotes on key
+			
+			// ignore double quotes on key
 			int length = key.length();
 			if (key.charAt(0) == '"' && key.charAt(length - 1) == '"') {
-				key = key.substring(1, length - 1);
-			}
-			if (key.charAt(0) == '\'' && key.charAt(length - 1) == '\'') {
 				key = key.substring(1, length - 1);
 			}
 			String value = entry.substring(colonIdx + 1).trim();
@@ -146,26 +145,19 @@ public class JsObject {
 		if (jsonString != null) {
 			process();
 		}
-		Set<String> entries = new HashSet<String>();
+		List<String> entries = new ArrayList<String>();
 
 		for (String key : map.keySet()) {
 			String value = map.get(key);
-			entries.add(key + ":" + value);
+			entries.add("\"" + key + "\":" + value);
 		}
-		String[] array = entries.toArray(new String[entries.size()]);
-		Arrays.sort(array);
+
+		Collections.sort(entries);
 		
-		return '{' + join(array, ",") + '}';
+		return '{' + JsArray.join(entries) + '}';
 	}
-	
-	private String join(String[] array, String delimiter) {
-		if (array.length == 0) {
-			return "";
-		}
-		String s = array[0];
-		for (int i = 1; i < array.length; i ++) {
-			s += "," + array[i];
-		}
-		return s;
+		
+	private void error() {
+		throw new RuntimeException("Malformed JSON");
 	}
 }

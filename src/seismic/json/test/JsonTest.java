@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import seismic.json.JsObject;
+import seismic.json.JsArray;
 
 public class JsonTest {
 	
@@ -19,50 +20,64 @@ public class JsonTest {
 		
 		// remove whitespace
 		obj = new JsObject(" { a : 4 } ");
-		assertEquals("{a:4}", obj.toString());
+		assertEquals("{\"a\":4}", obj.toString());
 		
 		// use latter duplicate
 		obj = new JsObject("{a:4,a:8}");
-		assertEquals("{a:8}", obj.toString());
+		assertEquals("{\"a\":8}", obj.toString());
 		
-		// handle quoted keys
+		// don't add quotes on double-quoted keys
 		obj = new JsObject("{'a':4,b:10,\"c\":16}");
-		assertEquals("{a:4,b:10,c:16}", obj.toString());
+		assertEquals("{\"'a'\":4,\"b\":10,\"c\":16}", obj.toString());
 		
 		// handle commas in strings
-		obj = new JsObject("{a:',',b:\",\"}");
-		assertEquals("{a:',',b:\",\"}", obj.toString());
+		obj = new JsObject("{a:\",\",b:\",\"}");
+		assertEquals("{\"a\":\",\",\"b\":\",\"}", obj.toString());
 		
-		// nested object
-//		obj = new JsObject("{c:{d:9,e:18}},a:{b:5}");
-//		assertEquals("{a:{b:5},c:{d:9,e:18}}", obj.toString());
+		// handle colons in strings
+		obj = new JsObject("{a:\":\"}");
+		assertEquals("{\"a\":\":\"}", obj.toString());
+		
+		// nested getObject, no quotes on nested strings
+		obj = new JsObject("{c:{d:9,e:18},a:{b:5}}");
+		assertEquals("{\"a\":{b:5},\"c\":{d:9,e:18}}", obj.toString());
 	}
 	
 	@Test
 	public void testToString() {
 		// alphabetize by key
 		JsObject obj = new JsObject("{a:4,c:16,b:10}");
-		assertEquals("{a:4,b:10,c:16}", obj.toString());		
+		assertEquals("{\"a\":4,\"b\":10,\"c\":16}", obj.toString());		
 	}
 	
 	@Test
 	public void testGetType() {
-		// integer(), number()
+		// getInt(), number()
 		JsObject obj = new JsObject("{a:4,b:10.5,c:true,d:false}");
-		assertEquals("4", obj.string("a"));
-		assertEquals(4, obj.integer("a"));
-		assertEquals("10.5", obj.string("b"));
-		assertTrue(10.5 == obj.number("b"));
-		assertEquals("true", obj.string("c"));
-		assertTrue(obj.bool("c"));
-		assertFalse(obj.bool("d"));
+		assertEquals("4", obj.getString("a"));
+		assertEquals(4, obj.getInt("a"));
+		assertEquals("10.5", obj.getString("b"));
+		assertTrue(10.5 == obj.getDouble("b"));
+		assertEquals("true", obj.getString("c"));
+		assertTrue(obj.getBoolean("c"));
+		assertFalse(obj.getBoolean("d"));
 		
-//		obj = new JsObject("{a:{b:7}}");
-//		assertEquals(7, obj.object("a"));
+		obj = new JsObject("{a:{b:7}}");
+		assertEquals("{\"b\":7}", obj.getObject("a").toString());
+		assertEquals(7, obj.getObject("a").getInt("b"));
 	}
 	
 	@Test
-	public void testNestedGetType() {
+	public void testArray() {
 		
+		JsArray arr = new JsArray("[3,4,5]");
+		assertEquals("[3,4,5]", arr.toString());
+		
+		arr = new JsArray("[\"seismic\", 10, 15, false]");
+		assertEquals("[\"seismic\",10,15,false]", arr.toString());
+		assertEquals("\"seismic\"", arr.getString(0));
+		assertEquals(10, arr.getInt(1));
+		assertEquals(15, arr.getInt(2));
+		assertFalse(arr.getBoolean(3));
 	}
 }
