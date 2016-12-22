@@ -1,8 +1,8 @@
 # Prakhar Sahay 12/21/2016
 
 # Eclipse
-.project
-.classpath
+*.project
+*.classpath
 .settings
 
 # Build

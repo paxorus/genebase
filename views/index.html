@@ -2,51 +2,64 @@
 <head>
 	<title>Seismic GeneBase</title>
 	<link href="https://fonts.googleapis.com/css?family=Nunito+Sans" rel="stylesheet">
+	<link href="stylesheets/common.css" rel="stylesheet">
+	<link href="stylesheets/index.css" rel="stylesheet">
+	<link href="images/bio.ico" rel="shortcut icon">
 	<style>
-		body {
-			margin: 0;
+		input[type=text], input[type=password], input[type=submit] {
 			font-family: 'Nunito Sans', sans-serif;
-			background-image: url('images/sky-corn.jpg');
-			background-size: 100%; 
-		}
-		#primary {
-			background-color: rgba(255, 255, 255, 0.5);
+			border: 2px solid rgba(0,0,0,0);
+			padding: 5px;
+			font-size: 20px;
+			border-radius: 5px;
+			width: 400px;
 			text-align: center;
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			/* center */
-			width: 750px;
-			margin-left: -375px;
-			height: 300px;
-			margin-top: -150px;
+			cursor: pointer;
+		}
+		input[type=submit] {
+			color: white;
+			background-color: #0088ff;
+		}
+		input[type=submit]:hover {
+			opacity: 0.5;
+		}
+		input[type=text]:focus, input[type=password]:focus {
+			outline: none;
+			border: 2px solid #0088ff;
+			cursor: text;
+		}
+		button {
+			
 		}
 	</style>
 </head>
 <body>
 
 <div id="primary">
-	<h1>Welcome!</h1>
-	<p>Welcome, guest. Log in? Sign up?</p>
-	<br /><input id="key" type="text" placeholder="Search word..." />
-	<br /><button onclick="send()">Submit</button>
-	<br /><output id="out"></output>
+	<h1 id="greeting">Welcome, guest!</h1>
+	<span id="caption">Log in or create a free account!</span>
+	<br/><input id="username" type="text" placeholder="Username" />
+	<br/><br/><input id="password" type="password" placeholder="Password" />
+	<br/><br/><input onclick="send()" type="submit" value="Submit">
+	<br/><output id="out"></output>
 </div>
 	
 <script src="javascripts/jquery.js"></script>
 <script>
 function send(){
 	$.ajax({
-		url: "servlet/ServletCore",
+		url: "servlet/Login",
 		method: "POST",
 		success: receive,
 		data: {
-			searchword: $("#key").val()
+			username: $("#username").val(),
+			password: $("#password").val()
 		}
 	});
 }
 
 function receive(data, status, jqXHR) {
+	// transition if correct, else display error message
 	$("#out").text(data);
 }
 </script>

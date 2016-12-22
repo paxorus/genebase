@@ -4,6 +4,8 @@
 	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
 	version="3.1" metadata-complete="true">
 
+	<!-- App metadata -->
+	
     <display-name>
 		Seismic GeneBase
 	</display-name>
@@ -11,15 +13,8 @@
 		Tomcat-powered gene bank.
     </description>
 
-    <servlet>
-        <servlet-name>ServletCore</servlet-name>
-        <servlet-class>seismic.jsondb.ServletCore</servlet-class>
-    </servlet> 
-		
-    <servlet-mapping>
-        <servlet-name>ServletCore</servlet-name>
-        <url-pattern>/servlet/ServletCore</url-pattern>
-    </servlet-mapping>
+
+	<!-- Routing -->
 	
 	<welcome-file-list>
         <welcome-file>/views/index.html</welcome-file>
@@ -30,4 +25,26 @@
 		<location>/views/404.html</location>
 	</error-page>
 	
+	
+	<!-- Class manifest -->
+	
+    <servlet>
+        <servlet-name>ServletCore</servlet-name>
+        <servlet-class>seismic.jsondb.ServletCore</servlet-class>
+    </servlet> 
+		
+    <servlet-mapping>
+        <servlet-name>ServletCore</servlet-name>
+        <url-pattern>/servlet/ServletCore</url-pattern>
+    </servlet-mapping>
+	
+	<servlet>
+        <servlet-name>Login</servlet-name>
+        <servlet-class>seismic.jsondb.Login</servlet-class>
+    </servlet> 
+		
+    <servlet-mapping>
+        <servlet-name>Login</servlet-name>
+        <url-pattern>/servlet/Login</url-pattern>
+    </servlet-mapping>
 </web-app>
